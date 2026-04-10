@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bully My Idea — Wireframe v2</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: 'Inter', -apple-system, sans-serif; padding: 24px; display: flex; gap: 24px; min-height: 100vh; }
+
+  .screen { flex: 1; background: #0f0f0f; border: 1px solid #1e1e1e; border-radius: 16px; overflow: hidden; max-width: 420px; }
+  .screen-label { font-size: 11px; color: #444; text-align: center; padding: 8px; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid #1a1a1a; }
+
+  /* NAV */
+  .nav { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.02em; }
+  .logo span { color: #ff3b5c; }
+  .nav-actions { display: flex; gap: 10px; align-items: center; }
+  .btn-ghost { font-size: 12px; color: #666; cursor: pointer; }
+  .btn-primary { font-size: 12px; background: #ff3b5c; color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
+
+  /* FILTERS */
+  .filters { padding: 0 24px 16px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 12px; padding: 4px 12px; border-radius: 100px; border: 1px solid #1e1e1e; color: #666; cursor: pointer; }
+  .chip.active { border-color: #ff3b5c; color: #ff3b5c; background: rgba(255,59,92,.07); }
+
+  /* IDEA CARD */
+  .feed { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .idea-card { padding: 16px; border-radius: 12px; background: #141414; border: 1px solid #1e1e1e; cursor: pointer; transition: border-color .2s; }
+  .idea-card:hover { border-color: #333; }
+  .idea-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cat-badge { font-size: 10px; padding: 2px 8px; border-radius: 100px; font-weight: 500; }
+  .cat-tech { background: rgba(99,179,237,.1); color: #63b3ed; }
+  .cat-social { background: rgba(104,211,145,.1); color: #68d391; }
+  .cat-biz { background: rgba(246,173,85,.1); color: #f6ad55; }
+  .idea-title { font-size: 14px; font-weight: 600; color: #e8e8e8; margin-bottom: 5px; line-height: 1.4; }
+  .idea-desc { font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 10px; }
+  .idea-footer { display: flex; align-items: center; gap: 10px; }
+  .comment-count { font-size: 11px; color: #ff3b5c; font-weight: 500; }
+  .tags { font-size: 11px; color: #3a3a3a; }
+  .time { font-size: 11px; color: #2a2a2a; margin-left: auto; }
+
+  /* DETAIL PAGE */
+  .detail-header { padding: 20px 24px 0; }
+  .back { font-size: 12px; color: #444; margin-bottom: 16px; cursor: pointer; }
+  .detail-cats { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .detail-title { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 10px; letter-spacing: -.02em; }
+  .detail-desc { font-size: 13px; color: #666; line-height: 1.7; margin-bottom: 12px; }
+  .detail-author { font-size: 11px; color: #333; }
+
+  .divider { height: 1px; background: #161616; margin: 20px 0; }
+
+  /* FEEDBACK SECTION */
+  .feedback-section { padding: 0 24px 20px; }
+  .feedback-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .feedback-count { font-size: 13px; font-weight: 600; color: #ccc; }
+  .bully-btn { font-size: 12px; background: #ff3b5c; color: #fff; border-radius: 8px; padding: 7px 16px; font-weight: 600; cursor: pointer; }
+
+  .feedback-card { border-radius: 12px; background: #141414; border: 1px solid #1e1e1e; padding: 14px; margin-bottom: 8px; }
+  .feedback-user { font-size: 11px; color: #444; margin-bottom: 10px; }
+  .feedback-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .feedback-col { }
+  .feedback-col-label { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 5px; }
+  .col-strong { color: #68d391; }
+  .col-weak { color: #ff3b5c; }
+  .col-suggest { color: #f6ad55; }
+  .feedback-col p { font-size: 12px; color: #777; line-height: 1.5; }
+
+  /* BULLY FORM */
+  .bully-form { border: 1px solid #1e1e1e; border-radius: 12px; overflow: hidden; }
+  .bully-form-header { padding: 12px 16px; background: #141414; font-size: 12px; color: #555; display: flex; justify-content: space-between; }
+  .bully-form-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .form-field { }
+  .form-field label { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; display: block; margin-bottom: 5px; }
+  .form-field textarea { width: 100%; background: #0f0f0f; border: 1px solid #1e1e1e; border-radius: 8px; padding: 9px 12px; font-size: 12px; color: #aaa; resize: none; height: 52px; font-family: inherit; }
+  .form-submit { background: #ff3b5c; color: #fff; border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; margin-top: 4px; }
+
+  .label-text { font-size: 10px; color: #333; text-align: center; padding: 12px; letter-spacing: .05em; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen">
+  <div class="screen-label">/ — Ana Sayfa</div>
+
+  <div class="nav">
+    <div class="logo">bully <span>my idea</span></div>
+    <div class="nav-actions">
+      <span class="btn-ghost">Giriş</span>
+      <span class="btn-primary">+ Paylaş</span>
+    </div>
+  </div>
+
+  <div class="filters">
+    <span class="chip active">Tümü</span>
+    <span class="chip">Teknoloji</span>
+    <span class="chip">Sanat</span>
+    <span class="chip">İş</span>
+    <span class="chip">Sosyal</span>
+  </div>
+
+  <div class="feed">
+    <div class="idea-card">
+      <div class="idea-meta">
+        <span class="cat-badge cat-tech">teknoloji</span>
+        <span class="time">2s önce</span>
+      </div>
+      <div class="idea-title">AI ile otomatik CV üretici</div>
+      <div class="idea-desc">LinkedIn profilinden CV oluşturan, 5 farklı şablonla özelleştirilebilen platform.</div>
+      <div class="idea-footer">
+        <span class="comment-count">12 bully</span>
+        <span class="tags">#ai #cv</span>
+      </div>
+    </div>
+
+    <div class="idea-card">
+      <div class="idea-meta">
+        <span class="cat-badge cat-social">sosyal</span>
+        <span class="time">1s önce</span>
+      </div>
+      <div class="idea-title">Mahalle takas platformu</div>
+      <div class="idea-desc">Komşular arası eşya takası, para yok sadece takas mantığıyla çalışır.</div>
+      <div class="idea-footer">
+        <span class="comment-count">8 bully</span>
+        <span class="tags">#takas #mahalle</span>
+      </div>
+    </div>
+
+    <div class="idea-card">
+      <div class="idea-meta">
+        <span class="cat-badge cat-biz">iş</span>
+        <span class="time">3s önce</span>
+      </div>
+      <div class="idea-title">Drone teslimat servisi</div>
+      <div class="idea-desc">Şehir içi 30dk teslimat, drone filosu kiralama modeli üzerine kurulu.</div>
+      <div class="idea-footer">
+        <span class="comment-count">3 bully</span>
+        <span class="tags">#drone #lojistik</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen">
+  <div class="screen-label">/idea/[id] — Detay</div>
+
+  <div style="padding: 20px 24px 0;">
+    <div class="back">← Geri</div>
+    <div class="detail-cats">
+      <span class="cat-badge cat-tech">teknoloji</span>
+      <span style="font-size:11px;color:#333;padding:2px 0;">#ai &nbsp;#cv &nbsp;#productivity</span>
+    </div>
+    <div class="detail-title">AI ile otomatik CV üretici</div>
+    <div class="detail-desc">LinkedIn profilinden otomatik CV oluşturan, 5 farklı şablonla özelleştirilebilen bir platform kurmayı düşünüyorum. Temel problem: iş arayanlar her başvuru için saat harcıyor.</div>
+    <div class="detail-author">anonim · 2 saat önce</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="feedback-section">
+    <div class="feedback-header">
+      <span class="feedback-count">12 geri bildirim</span>
+      <span class="bully-btn">Bully Et</span>
+    </div>
+
+    <div class="feedback-card">
+      <div class="feedback-user">@mehmet · 1s önce</div>
+      <div class="feedback-grid">
+        <div class="feedback-col">
+          <div class="feedback-col-label col-strong">Güçlü</div>
+          <p>Pazar büyük, rekabet henüz az</p>
+        </div>
+        <div class="feedback-col">
+          <div class="feedback-col-label col-weak">Zayıf</div>
+          <p>LinkedIn API kısıtlı ve ücretli</p>
+        </div>
+        <div class="feedback-col">
+          <div class="feedback-col-label col-suggest">Öneri</div>
+          <p>Manuel upload seçeneği ekle</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bully-form">
+      <div class="bully-form-header">
+        <span>Geri bildirim yaz</span>
+        <span style="color:#ff3b5c;">anonim olarak devam et →</span>
+      </div>
+      <div class="bully-form-body">
+        <div class="form-field">
+          <label style="color:#68d391;">Güçlü yanlar</label>
+          <textarea placeholder="Ne işe yarıyor?"></textarea>
+        </div>
+        <div class="form-field">
+          <label style="color:#ff3b5c;">Zayıf yanlar</label>
+          <textarea placeholder="Nerede çöküyor?"></textarea>
+        </div>
+        <div class="form-field">
+          <label style="color:#f6ad55;">Öneri</label>
+          <textarea placeholder="Nasıl kurtarırsın?"></textarea>
+        </div>
+        <div class="form-submit">Gönder</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
