@@ -1,26 +1,8 @@
-import { createServerClient } from '@/lib/supabase/server'
 import IdeaCard from '@/components/IdeaCard'
 import CategoryFilter from '@/components/CategoryFilter'
 import type { Idea } from '@/types'
-import type { Category } from '@/types'
 import { Suspense } from 'react'
-
-// Exported for testing
-export function buildIdeasQuery(category: string | undefined) {
-  const supabase = createServerClient()
-  let query = supabase
-    .from('ideas')
-    .select('*, feedback_count:feedbacks(count)')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(20)
-
-  if (category) {
-    query = (query as any).eq('category', category as Category)
-  }
-
-  return query
-}
+import { buildIdeasQuery } from '@/lib/build-ideas-query'
 
 async function IdeaFeed({ category }: { category: string | undefined }) {
   const { data: ideas, error } = await buildIdeasQuery(category)

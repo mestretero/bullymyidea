@@ -4,7 +4,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createServerClient: vi.fn(),
 }))
 
-import { buildIdeasQuery } from './page'
+import { buildIdeasQuery } from '@/lib/build-ideas-query'
 import { createServerClient } from '@/lib/supabase/server'
 
 describe('buildIdeasQuery', () => {

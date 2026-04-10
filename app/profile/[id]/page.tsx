@@ -2,14 +2,9 @@ import { createServerClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import IdeaCard from '@/components/IdeaCard'
 import type { Idea } from '@/types'
+import { buildProfileQuery } from '@/lib/build-profile-query'
 
 interface Props { params: { id: string } }
-
-// Exported for testing
-export function buildProfileQuery(userId: string) {
-  const supabase = createServerClient()
-  return supabase.from('profiles').select('*').eq('id', userId).single()
-}
 
 export default async function ProfilePage({ params }: Props) {
   const supabase = createServerClient()

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildCategoryCountMap } from './page'
+import { buildCategoryCountMap } from '@/lib/build-category-count-map'
 
 describe('buildCategoryCountMap', () => {
   it('counts ideas per category', () => {

@@ -1,15 +1,7 @@
-import { createServerClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import IdeaCard from '@/components/IdeaCard'
 import type { Idea } from '@/types'
-
-// Exported for testing
-export async function checkAuth() {
-  const supabase = createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.is_anonymous) redirect('/auth')
-  return user
-}
+import { checkAuth } from '@/lib/check-auth'
+import { createServerClient } from '@/lib/supabase/server'
 
 export default async function MyIdeasPage() {
   const user = await checkAuth()

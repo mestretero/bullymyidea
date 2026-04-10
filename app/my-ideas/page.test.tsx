@@ -5,7 +5,7 @@ vi.mock('next/navigation', () => ({ redirect: mockRedirect }))
 vi.mock('@/lib/supabase/server', () => ({ createServerClient: vi.fn() }))
 
 import { createServerClient } from '@/lib/supabase/server'
-import { checkAuth } from './page'
+import { checkAuth } from '@/lib/check-auth'
 
 describe('checkAuth', () => {
   it('redirects to /auth when user is anonymous', async () => {

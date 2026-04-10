@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/lib/supabase/server', () => ({ createServerClient: vi.fn() }))
 import { createServerClient } from '@/lib/supabase/server'
-import { buildProfileQuery } from './page'
+import { buildProfileQuery } from '@/lib/build-profile-query'
 
 describe('buildProfileQuery', () => {
   it('queries profiles by id', () => {

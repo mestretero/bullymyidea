@@ -1,15 +1,7 @@
 import Link from 'next/link'
 import { CATEGORIES } from '@/lib/categories'
 import { createServerClient } from '@/lib/supabase/server'
-
-// Exported for testing
-export function buildCategoryCountMap(rows: { category: string }[]): Record<string, number> {
-  const countMap: Record<string, number> = {}
-  for (const row of rows) {
-    countMap[row.category] = (countMap[row.category] ?? 0) + 1
-  }
-  return countMap
-}
+import { buildCategoryCountMap } from '@/lib/build-category-count-map'
 
 export default async function CategoriesPage() {
   const supabase = createServerClient()
