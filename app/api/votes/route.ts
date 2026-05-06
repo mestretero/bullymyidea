@@ -1,42 +1,54 @@
 import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limit'
+import { isUuid } from '@/lib/sanitize'
 
 export async function POST(request: Request) {
-  const body = await request.json()
+  const body = await request.json().catch(() => ({}))
   const { feedback_id, vote_type } = body
 
-  if (!feedback_id) return NextResponse.json({ error: 'feedback_id gerekli' }, { status: 400 })
-  if (!['up', 'down'].includes(vote_type)) return NextResponse.json({ error: 'Geçersiz oy tipi' }, { status: 400 })
+  if (!isUuid(feedback_id)) return NextResponse.json({ error: 'Invalid feedback_id' }, { status: 400 })
+  if (!['up', 'down'].includes(vote_type)) return NextResponse.json({ error: 'Invalid vote type' }, { status: 400 })
 
   const supabase = createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Oturum yok' }, { status: 401 })
+  if (!user || user.is_anonymous) return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
 
-  // Check for existing vote
-  const { data: existing } = await supabase
+  const admin = createAdminClient()
+
+  // Disallow voting on own feedback (no farming). Use a single generic
+  // error for both "not found" and "self-vote" so attackers can't enumerate
+  // feedback authorship by probing.
+  const { data: fb } = await admin.from('feedbacks').select('user_id').eq('id', feedback_id).single()
+  if (!fb || fb.user_id === user.id) {
+    return NextResponse.json({ error: 'Vote not allowed' }, { status: 400 })
+  }
+
+  const allowed = await checkRateLimit(user.id, 'vote', 200)
+  if (!allowed) return NextResponse.json({ error: 'Daily vote limit reached' }, { status: 429 })
+
+  const { data: existing } = await admin
     .from('votes')
     .select('id, vote_type')
     .eq('feedback_id', feedback_id)
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (existing) {
-    if (existing.vote_type === vote_type) {
-      // Toggle off
-      await supabase.from('votes').delete().eq('id', existing.id)
-      return NextResponse.json({ action: 'removed' })
-    } else {
-      // Change vote
-      const { error } = await supabase.from('votes').update({ vote_type }).eq('id', existing.id)
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-      return NextResponse.json({ action: 'changed' })
-    }
+  if (existing && existing.vote_type === vote_type) {
+    await admin.from('votes').delete().eq('id', existing.id)
+    return NextResponse.json({ action: 'removed' })
   }
 
-  const { error } = await supabase
+  const { error } = await admin
     .from('votes')
-    .insert({ feedback_id, vote_type, user_id: user.id })
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ action: 'added' })
+    .upsert(
+      { feedback_id, vote_type, user_id: user.id },
+      { onConflict: 'feedback_id,user_id' }
+    )
+  if (error) {
+    console.error('votes upsert error:', error)
+    return NextResponse.json({ error: 'Vote failed' }, { status: 500 })
+  }
+  return NextResponse.json({ action: existing ? 'changed' : 'added' })
 }

@@ -33,8 +33,8 @@ describe('POST /api/votes', () => {
       from: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
-      insert: vi.fn().mockResolvedValue({ error: null }),
+      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     }
     vi.mocked(createServerClient).mockReturnValue(mockSupabase as any)
 

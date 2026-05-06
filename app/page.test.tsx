@@ -18,8 +18,8 @@ describe('buildIdeasQuery', () => {
     const mockSupabase = { from: vi.fn().mockReturnValue(mockQuery) }
     vi.mocked(createServerClient).mockReturnValue(mockSupabase as any)
 
-    buildIdeasQuery('teknoloji')
-    expect(mockQuery.eq).toHaveBeenCalledWith('category', 'teknoloji')
+    buildIdeasQuery('technology')
+    expect(mockQuery.eq).toHaveBeenCalledWith('category', 'technology')
   })
 
   it('does not filter when category is undefined', () => {

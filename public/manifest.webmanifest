@@ -1,0 +1,13 @@
+{
+  "name": "BullyMyIdea",
+  "short_name": "BullyMyIdea",
+  "description": "Founders submit ideas. The community delivers brutal critique.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0e0e",
+  "theme_color": "#cafd00",
+  "icons": [
+    { "src": "/bully-my-idea-icon.webp", "sizes": "192x192 512x512", "type": "image/webp", "purpose": "any maskable" }
+  ]
+}

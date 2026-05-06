@@ -1,40 +1,55 @@
-import Link from 'next/link'
 import { CATEGORIES } from '@/lib/categories'
-import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { buildCategoryCountMap } from '@/lib/build-category-count-map'
+import type { Idea } from '@/types'
+import CategoriesView from '@/components/CategoriesView'
+
+const CATEGORY_ICONS: Record<string, string> = {
+  technology:    'computer',
+  art:           'palette',
+  business:      'business_center',
+  social:        'groups',
+  education:     'school',
+  health:        'favorite',
+  entertainment: 'celebration',
+  other:         'more_horiz',
+}
+
+const SECTOR_CODES: Record<string, string> = {
+  technology:    'SEC: 001',
+  art:           'SEC: 002',
+  business:      'SEC: 003',
+  social:        'SEC: 004',
+  education:     'SEC: 005',
+  health:        'SEC: 006',
+  entertainment: 'SEC: 007',
+  other:         'SEC: 008',
+}
 
 export default async function CategoriesPage() {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
-  const { data: counts } = await supabase
+  const { data: allIdeasRaw } = await supabase
     .from('ideas')
-    .select('category')
+    .select('*, feedback_count:feedbacks(count)')
     .eq('status', 'active')
+    .order('created_at', { ascending: false })
 
-  const countMap = buildCategoryCountMap(counts ?? [])
+  const allIdeas: Idea[] = (allIdeasRaw ?? []).map((idea: any) => ({
+    ...idea,
+    feedback_count: idea.feedback_count?.[0]?.count ?? 0,
+  }))
+
+  const countMap = buildCategoryCountMap(allIdeasRaw ?? [])
+  const sorted = [...CATEGORIES].sort((a, b) => (countMap[b.value] ?? 0) - (countMap[a.value] ?? 0))
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 16px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-.02em', marginBottom: 32 }}>
-        Kategoriler
-      </h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-        {CATEGORIES.map(cat => (
-          <Link key={cat.value} href={`/?category=${cat.value}`} style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: '#141414', border: '1px solid #1e1e1e',
-              borderRadius: 12, padding: '16px 20px', cursor: 'pointer',
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: cat.color, marginBottom: 4 }}>
-                {cat.label}
-              </div>
-              <div style={{ fontSize: 12, color: '#444' }}>
-                {countMap[cat.value] ?? 0} fikir
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
+    <CategoriesView
+      allIdeas={allIdeas}
+      countMap={countMap}
+      sortedCategories={sorted.map(c => c.value)}
+      categoryIcons={CATEGORY_ICONS}
+      sectorCodes={SECTOR_CODES}
+    />
   )
 }

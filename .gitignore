@@ -1,4 +1,16 @@
 node_modules/
 .next/
+.env
 .env.local
+.env.production
 *.log
+tsconfig.tsbuildinfo
+.vercel
+.idea/
+.vscode/
+.DS_Store
+.claude/
+
+# Supabase CLI artefacts (preserve migrations dir)
+supabase/.temp/
+supabase/.branches/

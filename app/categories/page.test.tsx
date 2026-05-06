@@ -3,11 +3,11 @@ import { buildCategoryCountMap } from '@/lib/build-category-count-map'
 
 describe('buildCategoryCountMap', () => {
   it('counts ideas per category', () => {
-    const rows = [{ category: 'teknoloji' }, { category: 'teknoloji' }, { category: 'sanat' }]
+    const rows = [{ category: 'technology' }, { category: 'technology' }, { category: 'art' }]
     const result = buildCategoryCountMap(rows)
-    expect(result['teknoloji']).toBe(2)
-    expect(result['sanat']).toBe(1)
-    expect(result['iş']).toBeUndefined()
+    expect(result['technology']).toBe(2)
+    expect(result['art']).toBe(1)
+    expect(result['business']).toBeUndefined()
   })
 
   it('returns empty object for empty input', () => {

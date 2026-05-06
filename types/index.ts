@@ -1,8 +1,8 @@
 export type IdeaStatus = 'active' | 'archived'
 export type VoteType = 'up' | 'down'
 export type Category =
-  | 'teknoloji' | 'sanat' | 'iş' | 'sosyal'
-  | 'eğitim' | 'sağlık' | 'eğlence' | 'diğer'
+  | 'technology' | 'art' | 'business' | 'social'
+  | 'education' | 'health' | 'entertainment' | 'other'
 
 export interface Idea {
   id: string
@@ -14,6 +14,10 @@ export interface Idea {
   created_at: string
   status: IdeaStatus
   feedback_count?: number
+  media_urls?: string[]
+  whitepaper_url?: string
+  youtube_url?: string
+  language?: string
 }
 
 export interface Feedback {
@@ -26,6 +30,10 @@ export interface Feedback {
   created_at: string
   vote_counts?: { up: number; down: number }
   user_vote?: VoteType | null
+  language?: string
+  display_name?: string
+  username?: string | null
+  avatar_url?: string | null
 }
 
 export interface Vote {

@@ -1,13 +1,17 @@
-import { createServerClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
-import IdeaCard from '@/components/IdeaCard'
-import type { Idea } from '@/types'
-import { buildProfileQuery } from '@/lib/build-profile-query'
+import { createServerClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import ProfileView from '@/components/ProfileView'
+import type { Idea, Feedback } from '@/types'
+import { estimateBullyScore } from '@/lib/bully-score'
+import { activityScore } from '@/lib/achievements'
 
 interface Props { params: { id: string } }
 
 export default async function ProfilePage({ params }: Props) {
-  const supabase = createServerClient()
+  const authClient = createServerClient()
+  const { data: { user: currentUser } } = await authClient.auth.getUser()
+  const supabase = createAdminClient()
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -17,34 +21,95 @@ export default async function ProfilePage({ params }: Props) {
 
   if (!profile) return notFound()
 
-  const { data: ideas } = await supabase
+  const isOwner = currentUser?.id === params.id
+
+  // Public visitors see only active ideas; owner gets archived list too.
+  let ideasQuery: any = supabase
     .from('ideas')
     .select('*, feedback_count:feedbacks(count)')
     .eq('user_id', params.id)
-    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+  if (!isOwner) ideasQuery = ideasQuery.eq('status', 'active')
+  const { data: ideasRaw } = await ideasQuery
+
+  const { data: feedbacksGiven } = await supabase
+    .from('feedbacks')
+    .select('*, votes(vote_type)')
+    .eq('user_id', params.id)
     .order('created_at', { ascending: false })
 
-  const normalized: Idea[] = (ideas ?? []).map((idea: any) => ({
+  const allIdeas: Idea[] = (ideasRaw ?? []).map((idea: any) => ({
     ...idea,
-    feedback_count: idea.feedback_count?.[0]?.count ?? 0,
+    feedback_count: ((idea as any).feedback_count)?.[0]?.count ?? 0,
   }))
+  const ideas = allIdeas.filter(i => i.status !== 'archived')
+  const archivedIdeas = isOwner ? allIdeas.filter(i => i.status === 'archived') : []
+
+  const ratedIdeas = ideas.filter(idea => (idea.feedback_count ?? 0) > 0)
+  const avgBullyScore = ratedIdeas.length
+    ? (ratedIdeas.reduce((sum, idea) => sum + estimateBullyScore(idea.feedback_count ?? 0), 0) / ratedIdeas.length).toFixed(1)
+    : '—'
+
+  // Achievement stats
+  const upvotesReceived = (feedbacksGiven ?? []).reduce((sum: number, fb: any) => {
+    const ups = (fb.votes ?? []).filter((v: any) => v.vote_type === 'up').length
+    return sum + ups
+  }, 0)
+  const stats = {
+    feedbacks_given: feedbacksGiven?.length ?? 0,
+    ideas_posted: ideas.length,
+    upvotes_received: upvotesReceived,
+  }
+
+  // Real global rank: how many users score higher than this one.
+  const myScore = activityScore(stats)
+  const [{ data: allFeedbackCounts }, { data: allIdeaCounts }, { data: allUpvotes }] = await Promise.all([
+    supabase.from('feedbacks').select('user_id'),
+    supabase.from('ideas').select('user_id').eq('status', 'active'),
+    supabase.from('votes').select('vote_type, feedback_id, feedbacks(user_id)').eq('vote_type', 'up'),
+  ])
+
+  const userScores = new Map<string, { fg: number; ip: number; ur: number }>()
+  for (const row of (allFeedbackCounts ?? []) as any[]) {
+    if (!row.user_id) continue
+    const e = userScores.get(row.user_id) ?? { fg: 0, ip: 0, ur: 0 }
+    e.fg++
+    userScores.set(row.user_id, e)
+  }
+  for (const row of (allIdeaCounts ?? []) as any[]) {
+    if (!row.user_id) continue
+    const e = userScores.get(row.user_id) ?? { fg: 0, ip: 0, ur: 0 }
+    e.ip++
+    userScores.set(row.user_id, e)
+  }
+  for (const row of (allUpvotes ?? []) as any[]) {
+    const fbOwner = row.feedbacks?.user_id
+    if (!fbOwner) continue
+    const e = userScores.get(fbOwner) ?? { fg: 0, ip: 0, ur: 0 }
+    e.ur++
+    userScores.set(fbOwner, e)
+  }
+
+  const allScores = Array.from(userScores.values()).map(v => activityScore({
+    feedbacks_given: v.fg,
+    ideas_posted: v.ip,
+    upvotes_received: v.ur,
+  }))
+  const totalUsers = allScores.length
+  const higherCount = allScores.filter(s => s > myScore).length
+  const globalRank = myScore > 0 ? higherCount + 1 : totalUsers + 1
+  const rankInfo = { rank: globalRank, total: totalUsers, score: myScore }
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 16px' }}>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-.02em' }}>
-          {profile.username ?? 'Kullanıcı'}
-        </h1>
-        <p style={{ fontSize: 12, color: '#444', marginTop: 4 }}>
-          {normalized.length} fikir
-        </p>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {normalized.map(idea => <IdeaCard key={idea.id} idea={idea} />)}
-      </div>
-      {!normalized.length && (
-        <p style={{ color: '#444', fontSize: 13 }}>Henüz fikir yok.</p>
-      )}
-    </div>
+    <ProfileView
+      profile={profile}
+      ideas={ideas}
+      archivedIdeas={archivedIdeas}
+      feedbacksGiven={(feedbacksGiven ?? []) as Feedback[]}
+      avgBullyScore={avgBullyScore}
+      isOwner={isOwner}
+      stats={stats}
+      rankInfo={rankInfo}
+    />
   )
 }

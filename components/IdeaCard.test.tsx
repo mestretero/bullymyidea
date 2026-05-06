@@ -7,7 +7,7 @@ const mockIdea: Idea = {
   id: 'abc-123',
   title: 'Test fikri',
   description: 'Açıklama burada.',
-  category: 'teknoloji',
+  category: 'technology',
   tags: ['ai', 'test'],
   user_id: null,
   created_at: new Date().toISOString(),
@@ -23,12 +23,17 @@ describe('IdeaCard', () => {
 
   it('renders feedback count', () => {
     render(<IdeaCard idea={mockIdea} />)
-    expect(screen.getByText(/5 bully/i)).toBeInTheDocument()
+    expect(screen.getByText(/5 comments/i)).toBeInTheDocument()
   })
 
   it('renders category badge', () => {
     render(<IdeaCard idea={mockIdea} />)
-    expect(screen.getByText(/teknoloji/i)).toBeInTheDocument()
+    expect(screen.getByText(/technology/i)).toBeInTheDocument()
+  })
+
+  it('renders new label for zero feedback', () => {
+    render(<IdeaCard idea={{ ...mockIdea, feedback_count: 0 }} />)
+    expect(screen.getByText(/new/i)).toBeInTheDocument()
   })
 
   it('renders tags', () => {
