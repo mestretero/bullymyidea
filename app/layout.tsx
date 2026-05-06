@@ -30,6 +30,9 @@ export const metadata: Metadata = {
     description: 'Get your idea shredded. Brutally.',
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: '2s_YH2yg9sMknz7W9bkkkqrVXh6yGO8uVKyyKnXwA_8',
+  },
   icons: {
     icon: [
       { url: '/bully-my-idea-icon.webp', type: 'image/webp' },
